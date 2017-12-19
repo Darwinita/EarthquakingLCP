@@ -1,0 +1,237 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA, echo=TRUE, warning=FALSE, message=FALSE)
+knitr::opts_knit$set(progress = TRUE, verbose = TRUE)
+```
+
+---
+title: "EarthquakingLCP_vignette"
+author: "Lorenzo Carretero"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{EarthquakingLCP_vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Load required libraries:
+
+```{r lib}
+# install.packages(c("dplyr","readr","lubridate","stringr","ggplot2","grid","tidyr","leaflet"))
+library(dplyr)
+library(readr)
+library(lubridate)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(tidyr)
+library(leaflet)
+# devtools::install()
+# library(EarthquakingLCP)
+```
+
+# The NOAA Significant Earthquake Database:
+
+The Significant Earthquake Database contains information on 5,933 destructive earthquakes
+from 2150 B.C. to the present that meet at least one of the following criteria:
+Moderate damage (approximately $1 million or more), 10 or more deaths, Magnitude 7.5
+or greater, Modified Mercalli Intensity X or greater, or the earthquake generated a
+tsunami. To access the raw data files the user can use the following line of code:
+
+```{r setup_2}
+filename <- system.file("extdata", "signif.txt", package = "EarthquakingLCP")
+```
+
+# Description
+
+This is the vignette for the R package `EarthquakingLCP` written in R Markdown as a html_vignette document. The R package `EarthquakingLCP` implements seven exported useful functions (plus four internal unimported ones) to process and analyze data from the **U.S. National Oceanographic and Atmospheric Administration (NOAA)** on signicant earthquakes around the world. Please, visit [Significant Earthquake Database]({https://www.ngdc.noaa.gov/nndc/struts/form?t=101650&s=1&d=1}) for more informartion on the NOAA dataset. The functions are the following:
+
+1. `eq_clean_data()`: A read data file function into a cleaned version of a data frame.
+2. `eq_location_clean()`: A function to clean the `LOCATION_NAME` column from the
+NOAA data frame.
+3. `geom_timeline()`: A function to plot a timeline of earthquakes.
+4. `geom_timeline_label()`: A geom for labelling earthquake timeline plots created using
+ `geom_timeline()`.
+5. `eq_map()`: A function to create a leaflet map of earthquakes and annotations.
+6. `eq_create_label()`: A function to create labels for popups of earthquakes in leaflet maps.
+7. `theme_timeline`: An accessory function to format the theme of `geom_timeline` earhtquakes plots.
+
+# Details
+The R package `EarthquakingLCP` has the following main goals:
+
+* Obtaining/downloading the dataset and cleaning up some of the variables.
+
+* Visualizing some of the information in the NOAA earthquakes dataset, i.e.,  i) times at which earthquakes occur within certain countries, and ii) their magnitudes (i.e. Richter scale value) and the number of deaths associated with each earthquake.
+
+* Mapping the earthquake epicenters and providing some annotations with the mapped data.
+
+# Installation
+
+From **CRAN**
+
+```{r Installation_1, eval=FALSE}
+install.packages('EarthquakingLCP')
+```
+
+From **GITHUB**
+
+```{r Installation2, eval=FALSE}
+devtools::install_github("Darwinita/EarthquakingLCP")
+```
+
+**LOAD** using
+
+```{r Installation3, eval=FALSE}
+library(EarthquakingLCP)
+```
+
+# Usage
+
+### 1. `eq_clean_data`
+
+`eq_clean_data()` reads a filename from the U.S. National Oceanographic
+and Atmospheric Administration (NOAA) on signicant earthquakes around the world,
+into a clean version of an R data frame. It stops if the file does not exist.
+The cleaned version of the data frame has:
+
+i) the year, month and day  converted to the Date class, after dealing with negative years (BCE).
+ii) `EQ_PRIMARY`, `TOTAL_DEATHS`, `YEAR`, `LATITUDE` and `LONGITUDE` columns converted to numeric class.
+iii) A clean `LOCATION_NAME` column by calling the eq_location_clean function.
+
+#### Arguments
+`filename` Is a character string with the file name of the input NOAA data file.
+
+#### Usage
+
+```{r Usage_eq_clean_data}
+NOAAdf <- EarthquakingLCP::eq_clean_data(filename)
+summary(NOAAdf)
+```
+
+
+### 2. `eq_location_clean`
+
+`eq_location_clean()` cleans the `LOCATION_NAME` column from
+the NOAA data frame by stripping out the country name (including the colon)
+and converting names to title case.
+
+#### Arguments
+`dataframe` Is a data frame in dplyr format of the NOAA data.
+
+#### Usage
+
+```{r Usage_eq_location_clean}
+NOAAdf <- EarthquakingLCP::eq_clean_data(filename)
+cleanNOAAdf <- EarthquakingLCP::eq_location_clean(NOAAdf)
+summary(cleanNOAAdf)
+```
+
+
+### 3. `geom_timeline`
+`geom_timeline()` plots a timeline of earthquakes ranging from
+`xmin` to `xmax` dates with a point for each earthquake.
+Each point-earthquake is colored according to the number of fatal
+casualties and its size indicates the magnitudes in Richter's scale.
+
+#### Arguments
+
+`dataframe` A cleaned version of a NOAA data frame
+`stat` Statistical transformation. No data transformation if "identity".
+`xmin`  (optional): minimum date for earthquakes
+`xmax`  (optional): maximum date for earthquakes
+
+#### Usage
+
+```{r Usage_geom_timeline}
+xmin = lubridate::ymd_hm("1016-01-01",truncated = 2)
+xmax = lubridate::ymd_hm("2016-01-01",truncated = 2)
+NOAAdf <- EarthquakingLCP::eq_clean_data(filename)
+NOAAdfSp <- NOAAdf %>%
+   dplyr::filter(COUNTRY %in% c("SPAIN", "IRAN", "BELGIUM"))
+ ggplot2::ggplot(data = NOAAdfSp, ggplot2::aes(x = DATE,
+                             y = COUNTRY)
+                 ) +
+   EarthquakingLCP::geom_timeline(ggplot2::aes(size = EQ_PRIMARY,
+                     fill = TOTAL_DEATHS),
+                 xmin = xmin, xmax = xmax) +
+   EarthquakingLCP::theme_timeline() +
+   ggplot2::labs(size = "Richter scale value", color = "# deaths")
+```
+
+
+### 4. `geom_timeline_label`
+
+`geom_timeline_label()`  adds a vertical line to each earthquake data
+point with a text label (e.g. `LOCATION_NAME`). There should be an option to
+subset to n_max number of earthquakes,sorted by any measure of magnitude
+(e.g. `EQ_PRIMARY`).
+
+#### Arguments
+
+`n_max`: An integer corresponding to the number of top earthquakes to label,
+sorted by measure of magnitude.
+
+#### Usage
+
+```{r Usage_geom_timeline_label}
+xmin = lubridate::ymd_hm("1016-01-01",truncated = 2)
+xmax = lubridate::ymd_hm("2016-01-01",truncated = 2)
+NOAAdf <- EarthquakingLCP::eq_clean_data(filename)
+NOAAdfSp <- NOAAdf %>%
+   dplyr::filter(COUNTRY %in% c("SPAIN", "IRAN", "BELGIUM"))
+ ggplot2::ggplot(data = NOAAdfSp, ggplot2::aes(x = DATE,
+                             y = COUNTRY)
+                 ) +
+   EarthquakingLCP::geom_timeline(ggplot2::aes(size = EQ_PRIMARY,
+                     fill = TOTAL_DEATHS),
+                 xmin = xmin, xmax = xmax) +
+   EarthquakingLCP::geom_timeline_label(aes(label = LOCATION_NAME, measure = EQ_PRIMARY),
+        xmin = xmin, xmax = xmax, n_max = 5) +
+   EarthquakingLCP::theme_timeline() +
+   ggplot2::labs(size = "Richter scale value", color = "# deaths")
+```
+
+### 5. `eq_map`
+
+`eq_map()` creates a map with the epicenters
+(`LATITUDE` & `LONGITUDE`) of selected earthquakes and annotates
+each point with a pop up window containing annotation data stored in a
+column of the data frame (e.g. `DATE`)
+
+#### Arguments
+
+`dataframe` A cleaned version of a NOAA data frame
+`annot_col` A character. The column of the data frame for which to annotate the
+pop up window for the selected earthquake.
+
+#### Usage
+
+```{r Usage_eq_map}
+NOAAdf <- EarthquakingLCP::eq_clean_data(filename)
+NOAAdf %>%
+         dplyr::filter(COUNTRY == "MEXICO" & lubridate::year(DATE) >= 2000) %>%
+         EarthquakingLCP::eq_map(annot_col = "DATE")
+```
+
+
+### 6. `eq_create_label`
+
+`eq_create_label()` pust together a character string for each earthquake
+that will show the cleaned location `LOCATION_NAME`, as cleaned by `eq_location_clean()`,
+the magnitude (e.g., `EQ_PRIMARY`), and the total number of deaths (e.g.,
+`TOTAL_DEATHS`), with boldface labels for each. If an earthquake has missing
+values for any of these, both the label and the value should be skipped.
+
+#### Arguments
+
+`dataframe` A cleaned version of a NOAA data frame
+
+#### Usage
+
+```{r Usage_eq_create_label}
+NOAAdf <- EarthquakingLCP::eq_clean_data(filename)
+NOAAdf %>%
+         dplyr::filter(COUNTRY == "MEXICO" & lubridate::year(DATE) >= 2000) %>%
+         dplyr::mutate(popup_text = EarthquakingLCP::eq_create_label(.)) %>%
+         EarthquakingLCP::eq_map(annot_col = "popup_text")
+```
