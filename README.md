@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Darwinita/EarthquakingLCP.svg?branch=master)](https://travis-ci.org/Darwinita/EarthquakingLCP)
+
 # EarthquakingLCP
 
 The R package `EarthquakingLCP` implements seven exported useful functions (plus four internal unimported ones) to process and analyze data from the **U.S. National Oceanographic and Atmospheric Administration (NOAA)** on signicant earthquakes around the world. Please, visit [Significant Earthquake Database]({https://www.ngdc.noaa.gov/nndc/struts/form?t=101650&s=1&d=1}) for more informartion on the NOAA dataset. The functions are the following:
