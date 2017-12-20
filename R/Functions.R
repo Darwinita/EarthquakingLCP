@@ -253,7 +253,7 @@ GeomTimeline <- ggplot2::ggproto( "GeomTimeline", ggplot2::Geom,
 #' @inheritParams ggplot2::geom_point
 #' @inheritParams geom_timeline
 #'
-#' @param n_max: An integer corresponding to the number of top earthquakes to label,
+#' @param n_max An integer corresponding to the number of top earthquakes to label,
 #' sorted by measure of magnitude.
 #' @param ... Additional arguments
 #'

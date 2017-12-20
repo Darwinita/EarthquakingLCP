@@ -47,13 +47,13 @@ the default plot specification, e.g. \code{\link{borders}}.}
 
 \item{xmax}{(optional): maximum date for earthquakes}
 
+\item{n_max}{An integer corresponding to the number of top earthquakes to label,
+sorted by measure of magnitude.}
+
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
 
 \item{...}{Additional arguments}
-
-\item{n_max:}{An integer corresponding to the number of top earthquakes to label,
-sorted by measure of magnitude.}
 }
 \value{
 A ggplot2 graphical object with labelled geom_timeline plots.
